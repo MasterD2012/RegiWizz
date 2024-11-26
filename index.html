@@ -3,241 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Student Register</title>
+    <title>Cloud-Based Student Register</title>
     <style>
-        /* General Reset */
-        * {
+        /* Basic styling from the previous example */
+        body {
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            background-color: #f5f5f5;
         }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f8f9fa;
-            color: #343a40;
-            line-height: 1.6;
-        }
-
         .container {
-            max-width: 1200px;
+            width: 90%;
+            max-width: 1000px;
             margin: 40px auto;
             padding: 20px;
-            background: white;
+            background: #fff;
             border-radius: 10px;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-
-        .header {
-            text-align: center;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #dee2e6;
-        }
-
         .header h1 {
-            font-size: 28px;
+            text-align: center;
             color: #007bff;
-            text-transform: uppercase;
         }
-
-        .marking-options, .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .marking-options label {
-            font-weight: bold;
-            margin-right: 10px;
-        }
-
-        select, .btn {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .btn {
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-            text-transform: uppercase;
-            transition: all 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #0056b3;
-        }
-
-        .btn-add {
-            background-color: #28a745;
-        }
-
-        .btn-add:hover {
-            background-color: #218838;
-        }
-
-        .btn-remove {
-            background-color: #dc3545;
-        }
-
-        .btn-remove:hover {
-            background-color: #c82333;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            overflow-x: auto;
         }
-
-        table th, table td {
-            padding: 10px;
-            border: 1px solid #dee2e6;
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
             text-align: center;
-            font-size: 14px;
         }
-
-        table th {
+        th {
             background-color: #007bff;
             color: white;
-            position: sticky;
-            top: 0;
-            z-index: 2;
         }
-
-        table tr:nth-child(even) {
-            background-color: #f8f9fa;
+        .login-container {
+            text-align: center;
+            margin-top: 50px;
         }
-
-        table tr:hover {
-            background-color: #e9ecef;
-        }
-
-        table td {
-            position: relative;
-        }
-
-        .mark-cell input, .mark-cell select {
-            width: 100%;
-            padding: 6px;
+        .login-container input {
+            margin: 10px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-size: 14px;
-            text-align: center;
         }
-
-        .mark-cell input[type="checkbox"] {
-            width: auto;
-            transform: scale(1.2);
-            margin: 0;
-        }
-
-        .previous-session {
-            font-size: 12px;
-            color: #6c757d;
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div id="login" class="login-container">
+        <h1>Login to Access the Register</h1>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button class="btn" onclick="login()">Login</button>
+    </div>
+
+    <div id="register-app" class="container" style="display: none;">
         <div class="header">
             <h1>Student Register</h1>
         </div>
-
-        <div class="marking-options">
-            <div>
-                <label for="marking-type">Marking Type:</label>
-                <select id="marking-type">
-                    <option value="checkbox">Checkbox</option>
-                    <option value="dropdown">Dropdown (Present/Absent)</option>
-                    <option value="text">Text Input</option>
-                </select>
-            </div>
-            <button class="btn btn-mark" onclick="updateMarking()">Update Marking</button>
-        </div>
-
-        <div class="controls">
-            <button class="btn btn-add" onclick="addStudent()">Add Student</button>
-            <button class="btn btn-remove" onclick="removeStudent()">Remove Selected</button>
-        </div>
-
         <table id="register-table">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Select</th>
                     <th>Student Name</th>
                     <th>Previous Session</th>
                     <th>Mark</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Dynamic rows will be added here -->
+                <!-- Dynamic rows -->
             </tbody>
         </table>
+        <button class="btn" onclick="addStudent()">Add Student</button>
+        <button class="btn" onclick="saveRegister()">Save Register</button>
     </div>
 
     <script>
-        let currentMarkingType = "checkbox";
-        let studentCount = 0;
+        let isLoggedIn = false;
+        let registerData = [];
 
-        function updateMarking() {
-            currentMarkingType = document.getElementById("marking-type").value;
-            const rows = document.querySelectorAll("#register-table tbody tr");
-            rows.forEach(row => updateMarkingCell(row.querySelector(".mark-cell")));
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                isLoggedIn = true;
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('register-app').style.display = 'block';
+                loadRegister();
+            } else {
+                alert('Login failed. Check your credentials.');
+            }
         }
 
-        function addStudent() {
-            const table = document.getElementById("register-table").querySelector("tbody");
-            const newRow = document.createElement("tr");
-            studentCount++;
+        async function loadRegister() {
+            const response = await fetch('/get-register');
+            registerData = await response.json();
+            const tableBody = document.getElementById('register-table').querySelector('tbody');
+            tableBody.innerHTML = '';
 
-            newRow.innerHTML = `
-                <td>${studentCount}</td>
-                <td><input type="checkbox" class="select-row"></td>
-                <td contenteditable="true" style="background-color: #ffffe0;">New Student</td>
-                <td class="previous-session">None</td>
-                <td class="mark-cell"></td>
-            `;
-
-            table.appendChild(newRow);
-            updateMarkingCell(newRow.querySelector(".mark-cell"));
-        }
-
-        function removeStudent() {
-            const rows = document.querySelectorAll("#register-table tbody tr");
-            rows.forEach(row => {
-                if (row.querySelector(".select-row").checked) {
-                    row.remove();
-                }
+            registerData.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td contenteditable="true">${student.name}</td>
+                    <td>${student.previousSession}</td>
+                    <td contenteditable="true">${student.mark}</td>
+                `;
+                tableBody.appendChild(row);
             });
         }
 
-        function updateMarkingCell(cell) {
-            cell.innerHTML = "";
-            if (currentMarkingType === "checkbox") {
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                cell.appendChild(checkbox);
-            } else if (currentMarkingType === "dropdown") {
-                const dropdown = document.createElement("select");
-                dropdown.innerHTML = `
-                    <option value="present">Present</option>
-                    <option value="absent">Absent</option>
-                `;
-                cell.appendChild(dropdown);
-            } else if (currentMarkingType === "text") {
-                const input = document.createElement("input");
-                input.type = "text";
-                input.placeholder = "Enter mark";
-                cell.appendChild(input);
+        async function saveRegister() {
+            const tableRows = document.querySelectorAll('#register-table tbody tr');
+            registerData = Array.from(tableRows).map(row => ({
+                name: row.cells[1].innerText,
+                previousSession: row.cells[2].innerText,
+                mark: row.cells[3].innerText
+            }));
+
+            const response = await fetch('/save-register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(registerData)
+            });
+
+            if (response.ok) {
+                alert('Register saved successfully!');
+            } else {
+                alert('Failed to save register.');
             }
+        }
+
+        function addStudent() {
+            const tableBody = document.getElementById('register-table').querySelector('tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${registerData.length + 1}</td>
+                <td contenteditable="true">New Student</td>
+                <td>None</td>
+                <td contenteditable="true"></td>
+            `;
+            tableBody.appendChild(row);
+            registerData.push({ name: 'New Student', previousSession: 'None', mark: '' });
         }
     </script>
 </body>
